@@ -144,6 +144,15 @@ func (env *Environment) CommandName(cmd string) string {
 	return parsedCmd.name
 }
 
+// CommandNames returns the list of all commands' names
+func (env *Environment) CommandNames() []string {
+	names := make([]string, 0, len(env.commands))
+	for k,_ := range env.commands {
+		names = append(names, k)
+	}
+	return names
+}
+
 // findCommand returns the commandStruct corresponding to the command parsed.
 // The lookup is by exact case sensitive name matching only.
 func (env *Environment) findCommand(parsedCmd *command) *commandStruct {
