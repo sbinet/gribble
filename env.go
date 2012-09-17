@@ -47,6 +47,17 @@ func New(commands []Command) *Environment {
 	}
 }
 
+// AddCommand adds a new gribble.Command to a Gribble environment.
+func (env *Environment) AddCommand(cmd Command) error {
+	cmdStruct := newCommandStruct(cmd)
+	if _, ok := env.commands[cmdStruct.name]; ok {
+		return fmt.Errorf("Two commands with the same name, '%s', are not allowed in the same Gribble environment.", 
+			cmdStruct.name)
+	}
+	env.commands[cmdStruct.name] = cmdStruct
+	return nil
+}
+
 // Run will execute a given command in the provided environment. An error can
 // occur when either parsing or running the command.
 //
