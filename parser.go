@@ -85,6 +85,7 @@ func newParser(invocation string, verbose bool) *parser {
 		verbose:  verbose,
 		errors:   make([]error, 0),
 	}
+	//p.Scanner.Mode = scanner.GoTokens
 	p.Init(strings.NewReader(invocation))
 	p.Error = func(s *scanner.Scanner, msg string) {
 		p.errors = append(p.errors, p.error(s.Position, msg))
@@ -109,23 +110,36 @@ func (p *parser) demands(c rune) {
 	p.Scan()
 }
 
-// command parses a command invocation. It can handle arbitrarily nested
-// parantheses. An error is logged when something other than a scanner.Ident
-// or a '(' is found.
+// command parses a command invocation.
 func (p *parser) command() *command {
-	switch tok := p.Scan(); tok {
-	case '(':
-		cmd := p.command()
-		p.demands(')')
-		return cmd
-	case scanner.Ident:
-		cmd := &command{
-			name:   p.TokenText(),
-			params: p.params(),
+	tok := p.Scan()
+	for tok != scanner.EOF {
+		switch tok {
+		case '/':
+			cmdname := []string{}
+			for tok != scanner.EOF {
+				cmdname = append(cmdname, p.tokText)
+				if p.Peek() == ' ' {
+					break
+				}
+				tok = p.Scan()
+			}
+			name := strings.Join(cmdname,"")
+			if name[:2] == "//" {
+				name = name[1:]
+			}
+			cmd := &command{
+				name:   name,
+				params: p.params(),
+			}
+			return cmd
+		default:
+			p.parseError("/command")
+			return &command{}
 		}
-		return cmd
+		tok = p.Scan()
 	}
-	p.parseError("command")
+	p.parseError("/command")
 	return &command{}
 }
 
